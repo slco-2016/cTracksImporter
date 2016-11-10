@@ -102,7 +102,12 @@ const csvMatch = (accounts) => {
     }
   }).on('close', () => {
     accounts = accounts.filter((ea) => {
-      return ea;
+      if (ea) {
+        console.log('ea.date', ea.date, moment(ea.date) > moment())
+        return moment(ea.date) > moment();
+      } else {
+        return false;
+      }
     });
 
     craftMessages(accounts);
@@ -128,10 +133,6 @@ const insertMessages = (messages) => {
         failedInserts.push(ea)
       } else {
         let client = clients[0];
-
-        // console.log(ea.date)
-        // console.log(moment(new Date(ea.date)).subtract(2, 'day').format('YYYY-MM-DD'))
-        // console.log('------------------------------------------------------------------')
         
         db('notifications')
           .insert({
