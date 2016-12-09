@@ -67,26 +67,41 @@ unlReader.on('line', (line) => {
   // ignore line length of 1, as these are empty arrays
   // if line is length 30, then the length is of a result with no court date
   // only lines of length 35 have a court date
-  if (!isNaN(line[0]) && line.length == 35) {
+  if (!isNaN(line[0]) && line.length == 36) {
     relevantAccounts.push(line);
+  } else {
+    // cannot use this line
   }
 }).on('close', () => {
+
+  // let's just get the id of the relevant users from the parsed list
   relevantAccounts = relevantAccounts.map((ea) => {
     return ea[0];
   });
+
+  // now let's look at the csv version instead because it has different data returned
+  // this is a result of the way the data is sent to us, it's roundabout but it works
   csvReader = readLine.createInterface({
     input: fs.createReadStream('data.csv')
   });
+
+  // run the next matching function
   csvMatch(relevantAccounts);
 });
 
 const csvMatch = (accounts) => {
-  // now switch over to the csv since the unl data is missing court locations
   csvReader.on('line', (line) => {
     line = line.split(',');
     let index = accounts.indexOf(line[0]);
+
+    // make sure that this is actually a result from the previous UNL parsing saved client rows
     if (index > -1) {
+
+      // data in the csv gets jumbled but the last 5 columns always seem to come out clean 
+      // (here's to hoping this is a reasonable assumption)
       let courtInfo = line.slice(-5);
+
+      // overwrite the value at that point with an object or null if not good data
       if (courtInfo[0] && courtInfo[1] && courtInfo[2] && courtInfo[3] && courtInfo[4]) {
         accounts[index] = {
           clientId: Number(accounts[index]),
@@ -99,11 +114,15 @@ const csvMatch = (accounts) => {
       } else {
         accounts[index] = null;
       }
+    } else {
+      // do nothing, does not matter b/c not in accounts list
     }
+
   }).on('close', () => {
     accounts = accounts.filter((ea) => {
+      // ignore null indices and...
       if (ea) {
-        console.log('ea.date', ea.date, moment(ea.date) > moment())
+        // only include values that have dates scheduled for times beyond current datetime
         return moment(ea.date) > moment();
       } else {
         return false;
@@ -130,10 +149,11 @@ const insertMessages = (messages) => {
       .limit(1)
     .then((clients) => {
       if (clients.length == 0) {
+        console.log(`A client (id: ${ea.clientId}) failed to be inserted.`);
         failedInserts.push(ea)
       } else {
         let client = clients[0];
-        
+
         db('notifications')
           .insert({
             cm: client.cm,
