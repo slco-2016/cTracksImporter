@@ -123,7 +123,9 @@ const csvMatch = (accounts) => {
       // ignore null indices and...
       if (ea) {
         // only include values that have dates scheduled for times beyond current datetime
-        return moment(ea.date) > moment();
+        let afterToday = moment(ea.date) > moment();
+        let onlyWithinSevenDays = moment(ea.date) < moment().add(8, 'days');
+        return afterToday && onlyWithinSevenDays;
       } else {
         return false;
       }
@@ -135,11 +137,38 @@ const csvMatch = (accounts) => {
 
 const craftMessages = (appointments) => {
   appointments = appointments.map((ea) => {
-    ea.message = `Your next court date is at ${ea.location} on ${ea.date} at ${ea.time}, in Room ${ea.room}. Text me with any questions.`;
+    ea.message = `Automated alert: Your next court date is at ${ea.location} on ${ea.date}, ${ea.time}, in Rm ${ea.room}. Please text with any questions.`;
     return ea;
   });
 
-  insertMessages(appointments)
+  checkIfAutoNotificationsAllowedForClientAndSend(appointments);
+};
+
+const checkIfAutoNotificationsAllowedForClientAndSend = (messages) => {
+  let clientIds = messages.map((ea) => {
+    return ea.clientId;
+  });
+
+  db('clients')
+    .select('clients.*')
+    .leftJoin('cms', 'clients.cm', 'cms.cmid')
+    .whereIn('clients.clid', clientIds)
+    .and.where('cms.allow_automated_notifications', true)
+  .then((clients) => {
+    let allowedClients = clients.map((ea) => {
+      return ea.clid;
+    });
+
+    let allowedMessages = messages.filter((ea) => {
+      return allowedClients.indexOf(ea.clientId) > -1;
+    });
+
+    if (allowedMessages.length > 0) {
+      insertMessages(allowedMessages)
+    }
+  }).catch((err) => {
+    console.log('Error on client left join with cms: ' + err);
+  })
 };
 
 const insertMessages = (messages) => {
@@ -161,7 +190,7 @@ const insertMessages = (messages) => {
             comm: null,
             subject: 'Auto-created court date reminder',
             message: ea.message,
-            send: moment(ea.date).subtract(2, 'day').format('YYYY-MM-DD'),
+            send: moment(ea.date).subtract(1, 'day').format('YYYY-MM-DD'),
             ovm_id: null,
             repeat: false,
             frequency: null,
