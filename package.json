@@ -1,0 +1,30 @@
+{
+  "name": "ctracksimporter",
+  "version": "1.0.0",
+  "description": "Tool to load in data from Ctracks in SLCO to ClientComm",
+  "main": "loader.js",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "knex": "^0.12.6",
+    "moment": "^2.17.1",
+    "pg": "^6.1.2",
+    "promise": "^7.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/slco-2016/cTracksImporter.git"
+  },
+  "keywords": [
+    "utility"
+  ],
+  "author": "Kuan Butts",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/slco-2016/cTracksImporter/issues"
+  },
+  "homepage": "https://github.com/slco-2016/cTracksImporter#readme"
+}
