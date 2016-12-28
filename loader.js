@@ -149,13 +149,19 @@ const checkIfAutoNotificationsAllowedForClientAndSend = (messages) => {
     return ea.clientId;
   });
 
+  // query by client id and see 
+  // 1. if user allows automated notifications
+  // 2. if client allows automated notifications
   db('clients')
     .select('clients.*')
     .leftJoin('cms', 'clients.cm', 'cms.cmid')
     .whereIn('clients.clid', clientIds)
     .and.where('cms.allow_automated_notifications', true)
   .then((clients) => {
-    let allowedClients = clients.map((ea) => {
+    let allowedClients = clients.filter((ea) => {
+      // make sure each client allows for autonotifications
+      return ea.allow_automated_notifications;
+    }).map((ea) => {
       return ea.clid;
     });
 
