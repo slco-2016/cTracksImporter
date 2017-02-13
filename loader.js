@@ -110,7 +110,7 @@ const csvMatch = (accounts) => {
           room: courtInfo[2],
           location: courtLocationsTable[courtInfo[3]],
           judge: correctCase(courtInfo[4]),
-        }
+        };
       } else {
         accounts[index] = null;
       }
@@ -170,11 +170,11 @@ const checkIfAutoNotificationsAllowedForClientAndSend = (messages) => {
     });
 
     if (allowedMessages.length > 0) {
-      insertMessages(allowedMessages)
+      insertMessages(allowedMessages);
     }
   }).catch((err) => {
     console.log('Error on client left join with cms: ' + err);
-  })
+  });
 };
 
 const insertMessages = (messages) => {
@@ -183,9 +183,9 @@ const insertMessages = (messages) => {
       .where('clid', ea.clientId)
       .limit(1)
     .then((clients) => {
-      if (clients.length == 0) {
+      if (clients.length === 0) {
         console.log(`A client (id: ${ea.clientId}) failed to be inserted.`);
-        failedInserts.push(ea)
+        failedInserts.push(ea);
       } else {
         let client = clients[0];
 
@@ -222,6 +222,6 @@ const insertMessages = (messages) => {
       }
     }).catch((err) => {
       console.log('Error on client query: ' + err);
-    })
+    });
   });
-}
+};
