@@ -8,7 +8,6 @@ const CCENV = process.env.CCENV || 'development';
 const baseProductionReadyCredentials = {
 
   // Allow access to CCENV be consistent from credentials.js
-  // TODO: Update all references to CCENV to be from here
   CCENV: CCENV,
 
   // Connection details for the production database
