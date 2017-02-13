@@ -1,8 +1,9 @@
 // Update with your config settings.
-var credentialsDB = require("./credentials")["db"];
+var credentialsDB = require("./credentials").db;
 var USER = credentialsDB.user;
 var PASS = credentialsDB.password;
 var HOST = credentialsDB.host;
+var PORT = credentialsDB.port;
 var localDbUser = credentialsDB.localDbUser;
 
 module.exports = {
@@ -21,7 +22,7 @@ module.exports = {
     client: "postgresql",
     connection: {
       host: HOST,
-      port: "5432",
+      port: PORT,
       database: "clientcomm",
       user:     USER,
       password: PASS
@@ -41,7 +42,7 @@ module.exports = {
     client: "postgresql",
     connection: {
       host: HOST,
-      port: "5432",
+      port: PORT,
       database: "clientcomm",
       user:     USER,
       password: PASS
