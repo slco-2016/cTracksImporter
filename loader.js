@@ -45,13 +45,13 @@ fs.readFile('court_locations.csv', 'utf8', (err, data) => {
       } else if (name == 'Salt Lake City Justice') {
         name += ' (333 S 200 E) ';
       } else if (name == 'Salt Lake County Justice') {
-        // TODO: What is address for this location?
+        name += ' (2100 South State St) ';
       } else if (name == 'South Jordan Justice') {
-        name += ' (8080 S Redwood Rd. Ste. 1701) ';
-      } else if (name == 'West Valley Justice') {
         name += ' (1600 West Towne Center Drive) ';
+      } else if (name == 'West Valley Justice') {
+        name += ' (3590 S 2700 W) ';
       } else if (name == 'Midvale Justice') {
-        name += ' 7505 S. Holden St ';
+        name += ' (7505 S Holden St) ';
       } else if (name == 'West Jordan Justice') {
         name += ' (8040 South Redwood Road) ';
       }
