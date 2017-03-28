@@ -1,3 +1,4 @@
+/* jshint node: true */
 'use strict';
 const config = require('./knexfile');
 let env = 'development';
