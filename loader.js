@@ -215,7 +215,7 @@ const insertMessages = (messages) => {
               created: db.fn.now(),
             });
         }).then(() => {
-          console.log('One client done (' + client.first + ' ' + client.last + ').');
+          console.log('add: [' + client.first + ' ' + client.last + '] -> ' + ea.date + ' ' + ea.time + ', ' + ea.location + ', ' + ea.room);
         }).catch((err) => {
           console.log('Error on notification create: ' + err);
         });
