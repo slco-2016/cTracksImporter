@@ -8,9 +8,13 @@ const readLine = require('readline');
 const Promise = require('bluebird');
 const db = require('knex')(config[env]);
 const moment = require('moment');
+// file locations
+const csvLocsFile = 'court_locations.csv';
+const csvDataFile = 'cjs-output.csv';
+const unlDataFile = 'cjs-output.unl';
 
 const unlReader = readLine.createInterface({
-  input: fs.createReadStream('data.unl')
+  input: fs.createReadStream(unlDataFile)
 });
 
 let csvReader;
@@ -30,7 +34,7 @@ const correctCase = (words) => {
 };
 
 // get in reference table
-fs.readFile('court_locations.csv', 'utf8', (err, data) => {
+fs.readFile(csvLocsFile, 'utf8', (err, data) => {
   if (err) {
     throw err;
   } else {
@@ -83,7 +87,7 @@ unlReader.on('line', (line) => {
   // now let's look at the csv version instead because it has different data returned
   // this is a result of the way the data is sent to us, it's roundabout but it works
   csvReader = readLine.createInterface({
-    input: fs.createReadStream('data.csv')
+    input: fs.createReadStream(csvDataFile)
   });
 
   // run the next matching function
