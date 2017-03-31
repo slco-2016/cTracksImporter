@@ -46,19 +46,21 @@ fs.readFile(csvLocsFile, 'utf8', (err, data) => {
       let name = correctCase(ea[1]);
 
       if (name == 'Salt Lake District') {
-        name += ' (Matheson Courthouse 450 South State St) ';
+        name += ' (Matheson Courthouse 450 South State St)';
       } else if (name == 'Salt Lake City Justice') {
-        name += ' (333 S 200 E) ';
+        name += ' (333 S 200 E)';
       } else if (name == 'Salt Lake County Justice') {
-        name += ' (2100 South State St) ';
+        name += ' (2100 South State St)';
       } else if (name == 'South Jordan Justice') {
-        name += ' (1600 West Towne Center Drive) ';
+        name += ' (1600 West Towne Center Drive)';
       } else if (name == 'West Valley Justice') {
-        name += ' (3590 S 2700 W) ';
+        name += ' (3590 S 2700 W)';
       } else if (name == 'Midvale Justice') {
-        name += ' (7505 S Holden St) ';
+        name += ' (7505 S Holden St)';
       } else if (name == 'West Jordan Justice') {
-        name += ' (8040 South Redwood Road) ';
+        name += ' (8040 South Redwood Road)';
+      } else if (name == 'Layton District') {
+        name += ' (425 N. Wasatch)';
       }
 
       courtLocationsTable[ea[0]] = name;
@@ -108,12 +110,14 @@ const csvMatch = (accounts) => {
 
       // overwrite the value at that point with an object or null if not good data
       if (courtInfo[0] && courtInfo[1] && courtInfo[2] && courtInfo[3] && courtInfo[4]) {
+        // trim 0s off the front of the location id
+        let locationID = courtInfo[3].replace(/^0+/, '');
         accounts[index] = {
           clientId: Number(accounts[index]),
           date: courtInfo[0],
           time: courtInfo[1],
           room: courtInfo[2],
-          location: courtLocationsTable[courtInfo[3]],
+          location: courtLocationsTable[locationID],
           judge: correctCase(courtInfo[4]),
         };
       } else {
