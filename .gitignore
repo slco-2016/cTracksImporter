@@ -1,5 +1,5 @@
-data.csv
-data.unl
+data.*
+cjs-output.*
 credentials.js
 node_modules/
 _old/
