@@ -25,7 +25,7 @@ let relevantAccounts = [];
 let failedInserts = [];
 
 // util
-const correctCase = (words) => {
+const titleCase = (words) => {
   if (!words) return '';
 
   return words.split(' ').map((ea) => {
@@ -43,7 +43,7 @@ fs.readFile(csvLocsFile, 'utf8', (err, data) => {
     });
     courtLocationsTable = {};
     data.forEach((ea) => {
-      let name = correctCase(ea[1]);
+      let name = titleCase(ea[1]);
 
       if (name == 'Salt Lake District') {
         name += ' (Matheson Courthouse 450 South State St)';
@@ -118,7 +118,7 @@ const csvMatch = (accounts) => {
           time: courtInfo[1],
           room: courtInfo[2],
           location: courtLocationsTable[locationID],
-          judge: correctCase(courtInfo[4]),
+          judge: titleCase(courtInfo[4]),
         };
       } else {
         accounts[index] = null;
