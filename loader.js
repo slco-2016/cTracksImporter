@@ -81,7 +81,7 @@ unlReader.on('line', (line) => {
   }
 }).on('close', () => {
 
-  // let's just get the id of the relevant users from the parsed list
+  // get a list of IDs of relevant users from the parsed list
   relevantAccounts = relevantAccounts.map((ea) => {
     return ea[0];
   });
@@ -97,6 +97,7 @@ unlReader.on('line', (line) => {
 });
 
 const csvMatch = (accounts) => {
+  // accounts is a list of IDs
   csvReader.on('line', (line) => {
     line = line.split(',');
     let index = accounts.indexOf(line[0]);
@@ -131,30 +132,33 @@ const csvMatch = (accounts) => {
     accounts = accounts.filter((ea) => {
       // ignore null indices and...
       if (ea) {
-        // only include values that have dates scheduled for times beyond current datetime
-        let afterToday = moment(ea.date) > moment();
-        let onlyWithinSevenDays = moment(ea.date) < moment().add(8, 'days');
+        // only include dates scheduled within a week from today
+        // assuming date format in csv matches this pattern: MM/DD/YYYY
+        let afterToday = moment(ea.date, "MM/DD/YYYY") > moment();
+        let onlyWithinSevenDays = moment(ea.date, "MM/DD/YYYY") < moment().add(8, 'days');
         return afterToday && onlyWithinSevenDays;
       } else {
         return false;
       }
     });
 
-    craftMessages(accounts);
+    craftNotifications(accounts);
   });
 };
 
-const craftMessages = (appointments) => {
+const craftNotifications = (appointments) => {
   appointments = appointments.map((ea) => {
-    ea.message = `Automated alert: Your next court date is at ${ea.location} on ${ea.date}, ${ea.time}, in Rm ${ea.room}. Please text with any questions.`;
+    ea.message = `Automated alert: Your next court date is at ${ea.location} ` +
+                 `on ${ea.date}, ${ea.time}, in Rm ${ea.room}. Please text ` +
+                 `with any questions.`;
     return ea;
   });
 
-  checkIfAutoNotificationsAllowedForClientAndSend(appointments);
+  validateNotifications(appointments);
 };
 
-const checkIfAutoNotificationsAllowedForClientAndSend = (messages) => {
-  let clientIds = messages.map((ea) => {
+const validateNotifications = (notifications) => {
+  let clientIds = notifications.map((ea) => {
     return ea.clientId;
   });
 
@@ -174,63 +178,106 @@ const checkIfAutoNotificationsAllowedForClientAndSend = (messages) => {
       return ea.clid;
     });
 
-    let allowedMessages = messages.filter((ea) => {
+    let allowedMessages = notifications.filter((ea) => {
       return allowedClients.indexOf(ea.clientId) > -1;
     });
 
     if (allowedMessages.length > 0) {
-      insertMessages(allowedMessages);
+      queueNotifications(allowedMessages);
     }
   }).catch((err) => {
     console.log('Error on client left join with cms: ' + err);
   });
 };
 
-const insertMessages = (messages) => {
-  messages.forEach((ea) => {
+const queueNotifications = (newNotifications) => {
+  newNotifications.forEach((ea) => {
     db('clients')
       .where('clid', ea.clientId)
       .limit(1)
     .then((clients) => {
       if (clients.length === 0) {
-        console.log(`A client (id: ${ea.clientId}) failed to be inserted.`);
+        console.log(`A client with id ${ea.clientId} could not be found.`);
         failedInserts.push(ea);
       } else {
         let client = clients[0];
 
+        // does the client already have a matching court date
+        // notification in the queue?
+        let foundIdenticalNotification = false;
         db('notifications')
-          .insert({
-            cm: client.cm,
-            client: client.clid,
-            comm: null,
-            subject: 'Auto-created court date reminder',
-            message: ea.message,
-            send: moment(ea.date).subtract(1, 'day').format('YYYY-MM-DD'),
-            ovm_id: null,
-            repeat: false,
-            frequency: null,
-            sent: false,
-            closed: false,
-            repeat_terminus: null,
-          })
-        .then(() => {
-          return db('alerts_feed')
-            .insert({
-              user: client.cm,
-              created_by: null,
-              subject: `Auto-notifications created `,
-              message: `A court date notification was auto-created for ${client.first} ${client.last}. Edit it on their notifications page.`,
-              open: true,
-              created: db.fn.now(),
-            });
-        }).then(() => {
-          console.log('add: [' + client.first + ' ' + client.last + '] -> ' + ea.date + ' ' + ea.time + ', ' + ea.location + ', ' + ea.room);
+          .where('client', client.clid)
+          .and.where('send', '>', moment())
+          .and.where('message', 'ilike', 'automated alert%')
+        .then((automatedNotifications) => {
+          for (let i = 0; i < automatedNotifications.length; i++) {
+            let checkNotification = automatedNotifications[i];
+            if (checkNotification.message == ea.message) {
+              foundIdenticalNotification = true;
+              break;
+            }
+          }
+
+          // if we found a match, or if there are already scheduled
+          // notification(s), don't insert a new notification and
+          // notify the user
+          if (foundIdenticalNotification) {
+            console.log(`WARNING: NO NEW NOTIFICATION CREATED - I found an ` +
+                        `existing identical notification for client ` +
+                        client.clid + `: ` + ea.message);
+          } else if (automatedNotifications.length > 0) {
+            console.log(`WARNING: NO NEW NOTIFICATION CREATED - I found ` +
+                        automatedNotifications.length + ` existing automated ` +
+                        `notification(s) for client ` + client.clid);
+          } else {
+            // It's safe to insert the notification
+            insertNotification(client, ea);
+          }
+
+          console.log('------------------------------------------');
+
         }).catch((err) => {
-          console.log('Error on notification create: ' + err);
+          console.log('Error on notification query: ' + err);
         });
+
       }
     }).catch((err) => {
       console.log('Error on client query: ' + err);
     });
+  });
+};
+
+const insertNotification = (client, notification) => {
+  db('notifications')
+    .insert({
+      cm: client.cm,
+      client: client.clid,
+      comm: null,
+      subject: 'Auto-created court date reminder',
+      message: notification.message,
+      send: moment(notification.date, "MM/DD/YYYY").subtract(1, 'day').format('YYYY-MM-DD'),
+      ovm_id: null,
+      repeat: false,
+      frequency: null,
+      sent: false,
+      closed: false,
+      repeat_terminus: null,
+    })
+  .then(() => {
+    return db('alerts_feed')
+      .insert({
+        user: client.cm,
+        created_by: null,
+        subject: `Auto-notifications created`,
+        message: `A court date notification was auto-created for ${client.first} ${client.last}. Edit it on their notifications page.`,
+        open: true,
+        created: db.fn.now(),
+      });
+  }).then(() => {
+    console.log(`created notification: [` + client.first + ` ` + client.last +
+                `] -> ` + notification.date + ` ` + notification.time + `, ` +
+                notification.location + `, ` + notification.room);
+  }).catch((err) => {
+    console.log('Error on notification create: ' + err);
   });
 };
