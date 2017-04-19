@@ -148,8 +148,8 @@ const csvMatch = accounts => {
           // only include dates scheduled within a week from today
           // assuming date format in csv matches this pattern: MM/DD/YYYY
           let afterToday = moment(ea.date, 'MM/DD/YYYY') > moment();
-          let onlyWithinSevenDays = moment(ea.date, 'MM/DD/YYYY') <
-            moment().add(8, 'days');
+          let onlyWithinSevenDays =
+            moment(ea.date, 'MM/DD/YYYY') < moment().add(8, 'days');
           return afterToday && onlyWithinSevenDays;
         } else {
           return false;
@@ -162,7 +162,8 @@ const csvMatch = accounts => {
 
 const craftNotifications = appointments => {
   appointments = appointments.map(ea => {
-    ea.message = `Automated alert: Your next court date is at ` +
+    ea.message =
+      `Automated alert: Your next court date is at ` +
       `${ea.location} on ${ea.date}, ${ea.time}, in Rm ${ea.room}. ` +
       `Please text with any questions.`;
     return ea;
@@ -244,14 +245,16 @@ const queueNotifications = newNotifications => {
                 console.log(
                   `WARNING: NO NEW NOTIFICATION CREATED - I found an ` +
                     `existing identical notification for client ` +
-                    `${client.clid}: ${ea.message}`
+                    `${client.first} ${client.last} ` +
+                    `(${client.clid}): ${ea.message}`
                 );
                 console.log('------------------------------------------');
               } else if (automatedNotifications.length > 0) {
                 console.log(
                   `WARNING: NO NEW NOTIFICATION CREATED - I found ` +
                     `${automatedNotifications.length} existing automated ` +
-                    `notification(s) for client ${client.clid}`
+                    `notification(s) for client ${client.first} ` +
+                    `${client.last} (${client.clid})`
                 );
                 console.log('------------------------------------------');
               } else {
@@ -268,6 +271,14 @@ const queueNotifications = newNotifications => {
         console.log('ERROR: on client query: ' + err);
       });
   });
+};
+
+const logNotification = (client, notification) => {
+  console.log(
+    `I want to create this notification for ` +
+      `${client.first} ${client.last} -> "${notification.message}"`
+  );
+  console.log('------------------------------------------');
 };
 
 const insertNotification = (client, notification) => {
