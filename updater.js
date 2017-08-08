@@ -56,18 +56,7 @@ const processClients = clients => {
           );
         }
         if (valid && needsUpdate) {
-          db("clients")
-            .where("clid", ea.clid)
-            .update({ dob: cdob, otn: ea["Ctrack#"] })
-            .then(success => {
-              if (success) {
-                console.log(
-                  `$$$$$$$$$$$ updated client ${ea.clid} $$$$$$$$$$$`
-                );
-              } else {
-                console.log(`ERROR: Failed to update client ${ea.clid}.`);
-              }
-            });
+          performUpdate(ea.clid, cdob, ea["Ctrack#"]);
         } else if (!valid) {
           console.log(
             `WARNING: Didn't update client ${ea.clid} ` +
@@ -78,4 +67,25 @@ const processClients = clients => {
       }
     });
   });
+};
+
+const logUpdate = (clientId, dob, ctrackNumber) => {
+  console.log(
+    `$$$$$$$$$$$ will update client ${clientId} $$$$$$$$$$$`
+  );
+};
+
+const performUpdate = (clientId, dob, ctrackNumber) => {
+  db("clients")
+    .where("clid", clientId)
+    .update({ dob: dob, otn: ctrackNumber })
+    .then(success => {
+      if (success) {
+        console.log(
+          `$$$$$$$$$$$ updated client ${clientId} $$$$$$$$$$$`
+        );
+      } else {
+        console.log(`ERROR: Failed to update client ${clientId}.`);
+      }
+    });
 };
