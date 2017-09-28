@@ -273,15 +273,28 @@ const queueNotifications = newNotifications => {
   });
 };
 
+const getRandomInt = (min, max) => {
+  // The maximum is exclusive and the minimum is inclusive
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+};
+
 const logNotification = (client, notification) => {
+  let minute = ('0' + getRandomInt(0, 31)).slice(-2);
+  let sendat = moment(notification.date, 'MM/DD/YYYY')
+    .subtract(1, 'day')
+    .format(`YYYY-MM-DD 23:${minute}`);
   console.log(
     `I want to create this notification for ` +
-      `${client.first} ${client.last} -> "${notification.message}"`
+    `${client.first} ${client.last} -> "${notification.message}" ` +
+    `and send it at ${sendat}`
   );
   console.log('------------------------------------------');
 };
 
 const insertNotification = (client, notification) => {
+  let minute = ('0' + getRandomInt(0, 31)).slice(-2);
   db('notifications')
     .insert({
       cm: client.cm,
@@ -291,7 +304,7 @@ const insertNotification = (client, notification) => {
       message: notification.message,
       send: moment(notification.date, 'MM/DD/YYYY')
         .subtract(1, 'day')
-        .format('YYYY-MM-DD'),
+        .format(`YYYY-MM-DD 23:${minute}`),
       ovm_id: null,
       repeat: false,
       frequency: null,
